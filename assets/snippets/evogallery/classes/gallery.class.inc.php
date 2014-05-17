@@ -88,7 +88,7 @@ class Gallery
 		$filter = " WHERE deleted = '0' AND published = '1' AND type = 'document' AND hidemenu <= '" . $this->config['ignoreHidden'] . "'";
 		if (!empty($docSelect))
 			$filter.=' AND '.$docSelect;
-	
+
 		if ($this->config['paginate']) {
 			//Retrieve total records
 			$totalRows = $modx->db->getValue('select count(*) from '.$modx->getFullTableName('site_content').$filter);
@@ -129,7 +129,7 @@ class Gallery
 
 					foreach ($row as $name => $value)
 						$item_phx->setPHxVariable($name, trim($value));
-                    
+
                     // Get template variable output for row and set variables as needed
                     $row_tvs = $modx->getTemplateVarOutput('*',$row['id']);
 					foreach ($row_tvs as $name => $value)
@@ -226,7 +226,9 @@ class Gallery
         $recordCount = $modx->db->getRecordCount($result);
 		if ($recordCount > 0)
 		{
-            $count = 1;		    
+			$count = 1;
+			$groupCounter = 0;
+			$groupedOutput = '';
 			while ($row = $modx->fetchRow($result))
 			{
 				$item_phx = new PHxParser();
@@ -235,9 +237,9 @@ class Gallery
 						$item_phx->setPHxVariable($name, rawurlencode(trim($value)));
 					else
 						$item_phx->setPHxVariable($name, trim($value));
-				$imgsize = getimagesize($this->config['galleriesPath'] . $row['content_id'] . '/' . $row['filename']); 
-				$item_phx->setPHxVariable('width',$imgsize[0]); 
-				$item_phx->setPHxVariable('height',$imgsize[1]); 
+				$imgsize = getimagesize($this->config['galleriesPath'] . $row['content_id'] . '/' . $row['filename']);
+				$item_phx->setPHxVariable('width',$imgsize[0]);
+				$item_phx->setPHxVariable('height',$imgsize[1]);
 				$item_phx->setPHxVariable('image_withpath', $this->config['galleriesUrl'] . $row['content_id'] . '/' . $row['filename']);
 				$item_phx->setPHxVariable('images_dir', $this->config['galleriesUrl'] . $row['content_id'] . '/');
 				$item_phx->setPHxVariable('thumbs_dir', $this->config['galleriesUrl'] . $row['content_id'] . '/thumbs/');
@@ -252,13 +254,30 @@ class Gallery
 				} else {
     				$items .= $item_phx->Parse($item_tpl);
 				}
+
+				if($this->config['group'] > 1){
+					$groupCounter++;
+					if($groupCounter == $this->config['group'] || $count == $recordCount)
+					{
+						$phx->setPHxVariable('items', $items);
+						$groupedOutput .= $phx->Parse($tpl);
+						$groupCounter = 0;
+						$items = '';
+					}
+				}
+
 				$count++;
 			}
 		}
-		$phx->setPHxVariable('items', $items);
 		$phx->setPHxVariable('plugin_dir', $this->config['snippetUrl'] . $this->config['type'] . '/');
 
-		return $phx->Parse($tpl);  // Pass through PHx;
+		if($this->config['group'] < 2){
+			$phx->setPHxVariable('items', $items);
+			return $phx->Parse($tpl);  // Pass through PHx;
+		} else {
+			return $groupedOutput;
+		}
+
 	}
 
 	/**
@@ -404,7 +423,7 @@ class Gallery
 		if (!empty($previoustpl))
 			$previousplaceholder = $this->processTemplate($this->config[$previoustpl],
 															array('url'=>$modx->makeUrl($modx->documentIdentifier,'',($previous!=1?"$pageUrl=$previous":"")),
-																'PaginatePreviousText'=>$this->config['paginatePreviousText']));			
+																'PaginatePreviousText'=>$this->config['paginatePreviousText']));
 		$nexttpl = '';
 		$nextplaceholder = '';
 		if ($next <= $totalPages)
@@ -414,7 +433,7 @@ class Gallery
 		if (!empty($nexttpl))
 			$nextplaceholder = $this->processTemplate($this->config[$nexttpl],
 														array('url'=>$modx->makeUrl($modx->documentIdentifier,'',($next!=1?"$pageUrl=$next":"")),
-																'PaginateNextText'=>$this->config['paginateNextText']));			
+																'PaginateNextText'=>$this->config['paginateNextText']));
 
 		$pages = '';
 		for ($i=1;$i<=$totalPages;$i++) {
@@ -436,7 +455,7 @@ class Gallery
 		$modx->setPlaceholder($this->config['id']."perPage", $rowsPerPage);
 		$modx->setPlaceholder($this->config['id']."totalPages", $totalPages);
 		return $start.','.($stop-$start+1);
-	}	
+	}
 
 }
 ?>

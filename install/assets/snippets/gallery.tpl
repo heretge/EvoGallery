@@ -27,6 +27,10 @@ $params['type'] = isset($type) ? $type : 'simple-list';
 	// Output type, if specified, the snippet will automatically load the required javascript
 	// Current types: simple-list, single, jquery-cycle
 
+$params['group'] = isset($group) ? intval($group) : 0;
+	// Splits images in groups by specified number and wraps every group in &tpl
+	// Must be greater than 1
+
 $params['includeAssets'] = isset($includeAssets) ? intval($includeAssets) : 1;
 	// Register external scripts and CSS files required by the specified gallery type
 	// If set to 0, these will need to be included manually in the document <head>
@@ -103,7 +107,7 @@ $params['id'] = isset($id)?$id:'';
 	// Unique ID for this EvoGallery instance and unique URL parameters
 
 $params['paginate'] = isset($paginate)?$paginate:0;
-	// Paginate the results set into pages of &show length. 
+	// Paginate the results set into pages of &show length.
 
 $params['paginateAlwaysShowLinks'] = isset($paginateAlwaysShowLinks)?$paginateAlwaysShowLinks:0;
 	// Determine whether or not to always show previous next links
